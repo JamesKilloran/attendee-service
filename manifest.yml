@@ -1,7 +1,7 @@
 applications:
 - name: attendee-service
   path: target/attendee-service-0.0.1-SNAPSHOT.jar
-  memory: 512M
+  memory: 768M
   host: eitan-attendee-service
   services:
   - attendee-db
