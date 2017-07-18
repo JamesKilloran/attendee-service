@@ -2,6 +2,7 @@ package io.pivotal;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import io.pivotal.enablement.attendee.model.Attendee;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,7 +14,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
-import static io.pivotal.support.AttendeeJSONBuilder.attendeeJSONBuilder;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -28,7 +28,7 @@ public class AttendeeServiceApplicationTest {
   @Before
   public void setup() {
 
-    String attendeeJSON = attendeeJSONBuilder()
+    Attendee attendee = Attendee.builder()
         .firstName("Bob")
         .lastName("Builder")
         .address("1234 Fake St")
@@ -39,10 +39,9 @@ public class AttendeeServiceApplicationTest {
         .emailAddress("bob@example.com")
         .build();
 
-    ResponseEntity<String> responseEntity = postJSON(attendeeJSON, "/attendees");
-    if (responseEntity.getStatusCode() != HttpStatus.CREATED) {
-      throw new RuntimeException("Unable to create attendee");
-    }
+    ResponseEntity<String> responseEntity = restTemplate.postForEntity("/attendees", attendee, null);
+
+    assertThat(responseEntity.getStatusCode(), equalTo(HttpStatus.CREATED));
   }
 
   @Test
@@ -72,12 +71,5 @@ public class AttendeeServiceApplicationTest {
     assertThat(emailAddress, equalTo("bob@example.com"));
   }
 
-  private ResponseEntity<String> postJSON(String attendeeJSON, String path) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_JSON);
-
-    HttpEntity<String> attendeeHttpEntity = new HttpEntity<>(attendeeJSON, headers);
-    return restTemplate.postForEntity(path, attendeeHttpEntity, String.class);
-  }
 }
 
