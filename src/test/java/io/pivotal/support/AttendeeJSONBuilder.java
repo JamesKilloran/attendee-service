@@ -1,8 +1,5 @@
 package io.pivotal.support;
 
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
-
 public class AttendeeJSONBuilder {
     private String firstName;
     private String lastName;
