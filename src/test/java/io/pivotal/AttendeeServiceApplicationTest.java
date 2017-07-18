@@ -14,8 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
@@ -41,34 +40,24 @@ public class AttendeeServiceApplicationTest {
 
     ResponseEntity<String> responseEntity = restTemplate.postForEntity("/attendees", attendee, null);
 
-    assertThat(responseEntity.getStatusCode(), equalTo(HttpStatus.CREATED));
+    assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
   }
 
   @Test
   public void serviceReturnsCollectionOfAttendees() throws Exception {
     String attendeeListJSON = restTemplate.getForObject("/attendees", String.class);
-    DocumentContext parsedResponse = JsonPath.parse(attendeeListJSON);
+    DocumentContext response = JsonPath.parse(attendeeListJSON);
+    List<Object> attendees = response.read("$._embedded.attendees");
+    assertThat(attendees.size()).isEqualTo(1);
 
-    List<Object> attendees = parsedResponse.read("$._embedded.attendees");
-    assertThat(attendees.size(), equalTo(1));
-
-    String firstName = parsedResponse.read("$._embedded.attendees[0].firstName");
-    String lastName = parsedResponse.read("$._embedded.attendees[0].lastName");
-    String address = parsedResponse.read("$._embedded.attendees[0].address");
-    String city = parsedResponse.read("$._embedded.attendees[0].city");
-    String state = parsedResponse.read("$._embedded.attendees[0].state");
-    String zipCode = parsedResponse.read("$._embedded.attendees[0].zipCode");
-    String phoneNumber = parsedResponse.read("$._embedded.attendees[0].phoneNumber");
-    String emailAddress = parsedResponse.read("$._embedded.attendees[0].emailAddress");
-
-    assertThat(firstName, equalTo("Bob"));
-    assertThat(lastName, equalTo("Builder"));
-    assertThat(address, equalTo("1234 Fake St"));
-    assertThat(city, equalTo("Detroit"));
-    assertThat(state, equalTo("Michigan"));
-    assertThat(zipCode, equalTo("80202"));
-    assertThat(phoneNumber, equalTo("555-7890"));
-    assertThat(emailAddress, equalTo("bob@example.com"));
+    assertThat(response.<String>read("$._embedded.attendees[0].firstName")).isEqualTo("Bob");
+    assertThat(response.<String>read("$._embedded.attendees[0].lastName")).isEqualTo("Builder");
+    assertThat(response.<String>read("$._embedded.attendees[0].address")).isEqualTo("1234 Fake St");
+    assertThat(response.<String>read("$._embedded.attendees[0].city")).isEqualTo("Detroit");
+    assertThat(response.<String>read("$._embedded.attendees[0].state")).isEqualTo("Michigan");
+    assertThat(response.<String>read("$._embedded.attendees[0].zipCode")).isEqualTo("80202");
+    assertThat(response.<String>read("$._embedded.attendees[0].phoneNumber")).isEqualTo("555-7890");
+    assertThat(response.<String>read("$._embedded.attendees[0].emailAddress")).isEqualTo("bob@example.com");
   }
 
 }
