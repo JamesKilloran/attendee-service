@@ -5,11 +5,9 @@ import com.jayway.jsonpath.JsonPath;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.*;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,9 +24,6 @@ public class AttendeeServiceApplicationTest {
 
   private RestTemplate restTemplate = new RestTemplate();
 
-  @Autowired
-  private JdbcTemplate jdbcTemplate;
-
   @Value("${local.server.port}")
   private int port;
 
@@ -36,18 +31,6 @@ public class AttendeeServiceApplicationTest {
 
   @Before
   public void setup() {
-    jdbcTemplate.execute("create table if not exists attendees (" +
-        "id bigint " +
-        ", first_name varchar(255)" +
-        ", last_name varchar(255)" +
-        ", address varchar(255)" +
-        ", city varchar(255)" +
-        ", state varchar(255)" +
-        ", zip_code varchar(255)" +
-        ", phone_number varchar(255)" +
-        ", email_address varchar(255)" +
-        ");");
-
     url = "http://localhost:" + port + "/attendees";
 
     String attendeeJSON = attendeeJSONBuilder()

@@ -31,3 +31,5 @@ spring:
     username: sa
     driverClassName: org.h2.Driver
     platform: h2
+  jpa:
+    generate-ddl: true
