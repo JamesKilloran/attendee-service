@@ -1,20 +1,22 @@
 package io.pivotal;
 
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
 import io.pivotal.enablement.attendee.model.Attendee;
+import io.restassured.RestAssured;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.List;
-
+import static io.restassured.RestAssured.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
@@ -24,8 +26,13 @@ public class AttendeeServiceApplicationTest {
   @Autowired
   private TestRestTemplate restTemplate;
 
+  @LocalServerPort
+  private int port;
+
   @Before
   public void setup() {
+
+    RestAssured.port = port;
 
     Attendee attendee = Attendee.builder()
         .firstName("Bob")
@@ -45,19 +52,19 @@ public class AttendeeServiceApplicationTest {
 
   @Test
   public void serviceReturnsCollectionOfAttendees() throws Exception {
-    String attendeeListJSON = restTemplate.getForObject("/attendees", String.class);
-    DocumentContext response = JsonPath.parse(attendeeListJSON);
-    List<Object> attendees = response.read("$._embedded.attendees");
-    assertThat(attendees.size()).isEqualTo(1);
-
-    assertThat(response.<String>read("$._embedded.attendees[0].firstName")).isEqualTo("Bob");
-    assertThat(response.<String>read("$._embedded.attendees[0].lastName")).isEqualTo("Builder");
-    assertThat(response.<String>read("$._embedded.attendees[0].address")).isEqualTo("1234 Fake St");
-    assertThat(response.<String>read("$._embedded.attendees[0].city")).isEqualTo("Detroit");
-    assertThat(response.<String>read("$._embedded.attendees[0].state")).isEqualTo("Michigan");
-    assertThat(response.<String>read("$._embedded.attendees[0].zipCode")).isEqualTo("80202");
-    assertThat(response.<String>read("$._embedded.attendees[0].phoneNumber")).isEqualTo("555-7890");
-    assertThat(response.<String>read("$._embedded.attendees[0].emailAddress")).isEqualTo("bob@example.com");
+    when()
+        .get("/attendees")
+      .then()
+        .statusCode(200)
+        .body("_embedded.attendees", hasSize(1))
+        .body("_embedded.attendees[0].firstName", equalTo("Bob"))
+        .body("_embedded.attendees[0].lastName", equalTo("Builder"))
+        .body("_embedded.attendees[0].address", equalTo("1234 Fake St"))
+        .body("_embedded.attendees[0].city", equalTo("Detroit"))
+        .body("_embedded.attendees[0].state", equalTo("Michigan"))
+        .body("_embedded.attendees[0].zipCode", equalTo("80202"))
+        .body("_embedded.attendees[0].phoneNumber", equalTo("555-7890"))
+        .body("_embedded.attendees[0].emailAddress", equalTo("bob@example.com"));
   }
 
 }
