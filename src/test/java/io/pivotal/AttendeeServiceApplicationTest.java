@@ -5,33 +5,28 @@ import com.jayway.jsonpath.JsonPath;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
 import static io.pivotal.support.AttendeeJSONBuilder.attendeeJSONBuilder;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = DEFINED_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 public class AttendeeServiceApplicationTest {
 
-  private RestTemplate restTemplate = new RestTemplate();
-
-  @Value("${local.server.port}")
-  private int port;
-
-  private String url;
+  @Autowired
+  private TestRestTemplate restTemplate;
 
   @Before
   public void setup() {
-    url = "http://localhost:" + port + "/attendees";
 
     String attendeeJSON = attendeeJSONBuilder()
         .firstName("Bob")
@@ -44,7 +39,7 @@ public class AttendeeServiceApplicationTest {
         .emailAddress("bob@example.com")
         .build();
 
-    ResponseEntity<String> responseEntity = postJSON(attendeeJSON, url);
+    ResponseEntity<String> responseEntity = postJSON(attendeeJSON, "/attendees");
     if (responseEntity.getStatusCode() != HttpStatus.CREATED) {
       throw new RuntimeException("Unable to create attendee");
     }
@@ -52,7 +47,7 @@ public class AttendeeServiceApplicationTest {
 
   @Test
   public void serviceReturnsCollectionOfAttendees() throws Exception {
-    String attendeeListJSON = restTemplate.getForObject(url, String.class);
+    String attendeeListJSON = restTemplate.getForObject("/attendees", String.class);
     DocumentContext parsedResponse = JsonPath.parse(attendeeListJSON);
 
     List<Object> attendees = parsedResponse.read("$._embedded.attendees");
@@ -77,12 +72,12 @@ public class AttendeeServiceApplicationTest {
     assertThat(emailAddress, equalTo("bob@example.com"));
   }
 
-  private ResponseEntity<String> postJSON(String attendeeJSON, String url) {
+  private ResponseEntity<String> postJSON(String attendeeJSON, String path) {
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     HttpEntity<String> attendeeHttpEntity = new HttpEntity<>(attendeeJSON, headers);
-    return restTemplate.postForEntity(url, attendeeHttpEntity, String.class);
+    return restTemplate.postForEntity(path, attendeeHttpEntity, String.class);
   }
 }
 
